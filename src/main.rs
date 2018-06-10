@@ -1,10 +1,22 @@
+mod stats;
+#[macro_use]
+extern crate lazy_static;
 extern crate hex;
 extern crate base64;
 
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::{
+    BufRead,
+    BufReader,
+};
+
 fn main() {
+    let freqs = stats::init();
     problem_1();
     problem_2();
-    problem_3();
+    problem_3(&freqs);
+    problem_4("4.txt".to_string(), &freqs);
 }
 
 fn problem_1() {
@@ -24,32 +36,76 @@ fn problem_2() {
     assert_eq!("746865206b696420646f6e277420706c6179", res_2);
 }
 
-fn problem_3() {
+fn problem_3(freqs: &HashMap<char, f32>) {
     let mut message_score = std::f32::MAX;
     let mut message = String::from("");
     let mut xor_char: char = 'a';
 
-    for c in b'a' ..= b'z' {
-        let temp = hex_xor_single("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736", &(c as char));
-        let temp_score = score(&temp);
-
-        if temp_score < message_score {
-            message_score = temp_score;
-            message = temp;
-            xor_char = c as char;
-        }
+    for c in b' ' ..= b'~' {
+        match decode_and_score("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736", &(c as char), freqs) {
+            Some(n) => {
+                if n.0 < message_score {
+                    message_score = n.0;
+                    message = n.1;
+                    xor_char = c as char;
+                }
+            },
+            None => ()
+        }    
     }
 
     println!("{} - {} - {}", xor_char, message_score, message);
 }
 
-fn hex_xor_single(in_str: &str, c: &char) -> String {
+// Answer is: 7b5a4215415d544115415d5015455447414c155c46155f4058455c5b523f
+fn problem_4(path: String, freqs: &HashMap<char, f32>) {
+    let f = File::open(path).unwrap();
+    let reader = BufReader::new(f);
+
+    for l in reader.lines() {
+        let mut message_score = std::f32::MAX;
+        let mut message: String;
+        let mut line: String;
+        let mut xor_char: char;
+
+        let temp_line = l.unwrap();
+        for c in b' ' ..= b'~' {
+            match decode_and_score(&temp_line, &(c as char), freqs) {
+                Some(n) => {
+                    if n.0 < message_score {
+                        message_score = n.0;
+                        message = n.1;
+                        xor_char = c as char;
+                        line = temp_line.clone();
+
+                        if message.len() > 1 && message.is_ascii() {
+                            println!("{} - {} - {} - {}", xor_char, message_score, line, message); 
+                        }
+                    }
+                },
+                None => ()
+            }
+        }
+    }
+}
+
+fn decode_and_score(in_str: &str, c: &char, freqs: &HashMap<char, f32>) -> Option<(f32, String)> {
+    match hex_xor_single(in_str, c) {
+        Some(n) => Some((stats::score(freqs, &n), n)),
+        None => None
+    }
+}
+
+fn hex_xor_single(in_str: &str, c: &char) -> Option<String> {
     let bytes_a = match hex::decode(in_str) {
         Ok(n) => n,
         Err(e) => panic!(e)
     };
     let res: Vec<u8> = bytes_a.iter().map(|x| x ^ *c as u8).collect();
-    String::from_utf8_lossy(&res).into_owned()
+    match String::from_utf8(res) {
+        Ok(n) => Some(n),
+        Err(_e) => None
+    }
 }
 
 fn hex_xor(in_a: &str, in_b: &str) -> String {
@@ -66,35 +122,4 @@ fn hex_xor(in_a: &str, in_b: &str) -> String {
     let result: Vec<u8> = bytes_a.iter().zip(bytes_b.iter()).map(|(a, b)| a ^ b).collect();
     
     hex::encode(result)
-}
-
-fn score(a: &String) -> f32 {
-    let expected = vec![0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015,  // A-G
-    0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749,  // H-N
-    0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758,  // O-U
-    0.00978, 0.02360, 0.00150, 0.01974, 0.00074];                     // V-Z
-
-    let mut count = vec![0; 26];
-    let mut ignored = 0;
-    for c in a.chars() {
-        if 'A' <= c && c <= 'Z'{
-            count[(c as u8 - 'A' as u8) as usize] += 1;
-        } else if 'a' <= c && c <= 'z' {
-            count[(c as u8 - 'a' as u8) as usize] += 1;
-        } else {
-            ignored += 1;
-        }
-    }
-
-    let mut chi2 = 0.0;
-    let len = a.len() - ignored;
-
-    for (x, y) in count.iter().zip(expected.iter()) {
-        let observed = x;
-        let expected = len as f32 * y;
-        let delta = *observed as f32 - expected;
-        chi2 += delta * delta / expected;
-    }
-
-    chi2
 }
