@@ -15,3 +15,7 @@ pub fn xor_single(in_a: &Vec<u8>, c: &u8) -> Vec<u8> {
     let res: Vec<u8> = in_a.iter().map(|x| x ^ *c).collect();
     res
 }
+
+pub fn repeating_key_xor(key: &Vec<u8>, input: &Vec<u8>) -> Vec<u8> {
+
+}

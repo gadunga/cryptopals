@@ -16,4 +16,5 @@ fn main() {
     s1c2::solve();
     s1c3::solve(&freqs);
     s1c4::solve("4.txt".to_string(), &freqs);
+    s1c5::solve();
 }
