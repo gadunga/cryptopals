@@ -24,7 +24,7 @@ pub fn solve(path: String, freqs: &HashMap<u8, f32>) {
         line.push_str(&temp_line);
     }
 
-    let file_bytes = match hex::decode(line) {
+    let file_bytes = match base64::decode(&line) {
         Ok(n) => n,
         Err(e) => panic!(e)
     };
@@ -59,21 +59,13 @@ pub fn solve(path: String, freqs: &HashMap<u8, f32>) {
 
     for block in buckets {
         let mut message_score = f32::MAX;
-        let mut message: String;
-        let mut line: String;
         let mut xor_char: u8 = 0u8;
 
         for c in b' ' ..= b'~' {
             let res_tuple = utils::xor_and_score(&block, &c, freqs);
-            match String::from_utf8(res_tuple.1) {
-                Ok(n) => {
-                    if res_tuple.0 < message_score {
+            if res_tuple.0 < message_score {
                         message_score = res_tuple.0;
-                        message = n;
                         xor_char = c;
-                    }  
-                },
-                Err(_e) => continue
             };
         }
 
@@ -85,6 +77,6 @@ pub fn solve(path: String, freqs: &HashMap<u8, f32>) {
         Ok(n) => n,
         Err(e) => panic!(e)
     };
-
+    println!("key: {:?}", key);
     println!("{}", decrypted);
 }
