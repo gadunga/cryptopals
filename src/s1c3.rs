@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 extern crate hex;
 
 use std::collections::HashMap;
@@ -15,7 +17,7 @@ pub fn solve(freqs: &HashMap<u8, f32>) {
     };
 
     for c in b' ' ..= b'~' {
-        let res_tuple = utils::xor_and_score(&bytes_a, &c, freqs);
+        let res_tuple = utils::xor_and_score(&bytes_a, &c, freqs, 0.8);
         match String::from_utf8(res_tuple.1) {
             Ok(n) => {
                 if res_tuple.0 < message_score {

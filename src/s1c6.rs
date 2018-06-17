@@ -29,31 +29,38 @@ pub fn solve(path: String, freqs: &HashMap<u8, f32>) {
         Err(e) => panic!(e)
     };
 
-    let mut smallest_distance = f32::MAX;
-    let mut key_candidate = 0;
+    let key_candidates = get_key_candidates(&file_bytes);
+    for key in key_candidates {
+        test_key_size(key, &file_bytes, freqs)
+    }
+}
+
+fn get_key_candidates(bytes: &Vec<u8>) -> Vec<usize> {
+    let mut pairs: Vec<(f32, usize)> = Vec::new();
 
     for keysize in 2 ..= 40 {
-        let mut iter = file_bytes.chunks(keysize);
-        let first = iter.next().unwrap();
-        let second = iter.next().unwrap();
-        let distance = hamming::distance(&first, &second);
-        let normalized_distance = distance as f32 / keysize as f32;
-        if normalized_distance < smallest_distance {
-            smallest_distance = normalized_distance;
-            key_candidate = keysize;
-        }
+        let mut iter = bytes.chunks(keysize);
+        let distance1 = hamming::distance(&iter.next().unwrap(), &iter.next().unwrap());
+        let distance2 = hamming::distance(&iter.next().unwrap(), &iter.next().unwrap());
+        let average: f32 = (distance1 as f32 + distance2 as f32) / 2.0;
+        let normalized_distance = average / keysize as f32;
+        pairs.push((normalized_distance, keysize));
     }
 
-    let chunks = file_bytes.chunks(key_candidate);
+    pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    pairs.iter().map(|a| a.1).collect()
+}
+
+fn test_key_size(key_size: usize, bytes: &Vec<u8>, freqs: &HashMap<u8, f32>) {
+    let chunks = bytes.chunks(key_size);
     let mut buckets: Vec<Vec<u8>> = Vec::new();
 
-    for i in 0 ..= chunks.len() {
+    for _i in 0 .. key_size {
         buckets.push(Vec::new());
     }
-
-    for chunk in chunks {
-        chunk.iter().enumerate().for_each(|(i, e)| { buckets[i].push(*e)} )
-    }
+    chunks.for_each(
+        |e| e.iter().enumerate().for_each(
+            |(i, e)| buckets[i].push(*e)));
 
     let mut key: Vec<u8> = Vec::new();
 
@@ -62,17 +69,23 @@ pub fn solve(path: String, freqs: &HashMap<u8, f32>) {
         let mut xor_char: u8 = 0u8;
 
         for c in b' ' ..= b'~' {
-            let res_tuple = utils::xor_and_score(&block, &c, freqs);
+            let res_tuple = utils::xor_and_score(&block, &c, freqs, 0.8);
             if res_tuple.0 < message_score {
-                        message_score = res_tuple.0;
-                        xor_char = c;
+                message_score = res_tuple.0;
+                xor_char = c;
             };
         }
 
-        key.push(xor_char);
+        if message_score != f32::MAX {
+            key.push(xor_char);
+        }
     }
 
-    let result = utils::xor_key(&file_bytes, &key);
+    if key.len() == 0 {
+        return;
+    }
+
+    let result = utils::xor_key(&bytes, &key);
     let decrypted = match String::from_utf8(result) {
         Ok(n) => n,
         Err(e) => panic!(e)

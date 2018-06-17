@@ -14,10 +14,10 @@ extern crate base64;
 
 fn main() {
     let freqs = stats::init();
-    //s1c1::solve();
-    //s1c2::solve();
-    //s1c3::solve(&freqs);
-    //s1c4::solve("4.txt".to_string(), &freqs);
-    //s1c5::solve();
+    s1c1::solve();
+    s1c2::solve();
+    s1c3::solve(&freqs);
+    s1c4::solve("4.txt".to_string(), &freqs);
+    s1c5::solve();
     s1c6::solve("6.txt".to_string(), &freqs);
 }

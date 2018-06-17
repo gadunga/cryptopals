@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 extern crate hex;
 extern crate base64;
 
