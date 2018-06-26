@@ -18,7 +18,7 @@ pub fn solve(path: String, freqs: &HashMap<u8, f32>) {
 
     for l in reader.lines() {
         let temp_line = l.unwrap();
-        let line_bytes = match hex::decode(temp_line.clone()) {
+        let line_bytes = match hex::decode(temp_line) {
             Ok(n) => n,
             Err(e) => panic!(e)
         };

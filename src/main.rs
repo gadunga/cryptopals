@@ -7,6 +7,7 @@ mod s1c4;
 mod s1c5;
 mod s1c6;
 mod s1c7;
+mod s1c8;
 
 #[macro_use]
 extern crate lazy_static;
@@ -37,4 +38,7 @@ fn main() {
     println!("Start P1C7.");
     s1c7::solve("7.txt".to_string());
     println!("End P1C7.");
+    println!("Start P1C8.");
+    s1c8::solve("8.txt".to_string());
+    println!("End P1C8.");
 }
