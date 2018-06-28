@@ -7,7 +7,9 @@ extern crate crypto;
 mod stats;
 mod utils;
 mod set1;
+mod set2;
 
 fn main() {
     set1::solve();
+    set2::solve();
 }

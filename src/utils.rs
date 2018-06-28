@@ -23,3 +23,16 @@ pub fn xor_key(input: &Vec<u8>, key: &Vec<u8>) -> Vec<u8> {
     }
     res
 }
+
+pub fn pad(input: &Vec<u8>, block_size: usize) -> Vec<u8> {
+    let mut res: Vec<u8> = Vec::new();
+    for c in input.chunks(block_size) {
+        let pad = block_size - c.len();
+        res.extend(c);
+        for _ in 0..pad { 
+            res.push(pad as u8);
+        }
+    }
+
+    res
+}
