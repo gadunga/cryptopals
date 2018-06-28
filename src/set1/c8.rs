@@ -1,10 +1,7 @@
 extern crate base64;
-extern crate crypto;
 extern crate hamming;
 extern crate hex;
 
-use crypto::{aes, blockmodes};
-use crypto::buffer::{ RefReadBuffer, RefWriteBuffer, BufferResult };
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{
